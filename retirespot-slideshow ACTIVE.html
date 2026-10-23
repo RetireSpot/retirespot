@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RetireSpot – Find Your Ideal Retirement City</title>
+<style>
+  :root { --bg: #ffe5d0; --card: #fff; --accent: #0d6efd; --text: #212529; --muted: #6c757d; --coral: #ff6b6b; }
+  * { box-sizing: border-box; }
+  body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; background: linear-gradient(135deg, #ffe5d0 0%, #ffd4b8 100%); color: var(--text); margin: 0; padding: 20px; line-height: 1.5; min-height: 100vh; }
+  .container { max-width: 720px; margin: 0 auto; }
+  h1 { color: var(--coral); margin-bottom: 0.25rem; text-align: center; font-size: 2.4rem; font-weight: 700; letter-spacing: -0.5px; }
+  .subtitle { color: #5a4a42; text-align: center; margin-top: 0; font-size: 1.1rem; font-weight: 500; }
+  .card { background: var(--card); border-radius: 16px; padding: 2rem; margin-bottom: 1.5rem; box-shadow: 0 4px 12px rgba(0,0,0,0.08); min-height: 420px; display: flex; flex-direction: column; }
+  .media-placeholder { background: #e9ecef; border-radius: 12px; height: 180px; display: flex; align-items: center; justify-content: center; color: var(--muted); margin-bottom: 1.5rem; font-size: 0.95rem; text-align: center; padding: 1rem; overflow: hidden; }
+  .media-placeholder img, .media-placeholder video { width: 100%; height: 100%; object-fit: cover; border-radius: 12px; }
+  .progress { font-size: 0.9rem; color: var(--muted); margin-bottom: 1rem; }
+  .question-text { font-size: 1.25rem; font-weight: 600; margin-bottom: 1.25rem; }
+  .options { display: flex; flex-direction: column; gap: 0.6rem; margin-bottom: 1.5rem; }
+  .options label { background: #f1f3f5; padding: 0.75rem 1rem; border-radius: 10px; cursor: pointer; }
+  .options input { margin-right: 0.5rem; }
+  .weight { margin-top: auto; font-size: 0.95rem; color: var(--muted); }
+  .weight input[type="range"] { width: 160px; vertical-align: middle; margin-left: 0.5rem; }
+  .nav { display: flex; justify-content: space-between; margin-top: 1.5rem; }
+  button { background: var(--accent); color: white; border: none; padding: 0.7rem 1.4rem; border-radius: 8px; font-size: 1rem; cursor: pointer; }
+  button.secondary { background: #6c757d; }
+  button:hover { opacity: 0.9; }
+  .results .city { border-bottom: 1px solid #eee; padding: 1rem 0; }
+  .results .city h3 { margin: 0 0 0.25rem; }
+  .results .city .desc { margin: 0.4rem 0; color: #444; }
+  .results .details { display: none; margin-top: 0.75rem; font-size: 0.9rem; background: #f8f9fa; padding: 0.75rem; border-radius: 8px; }
+  .results .city.open .details { display: block; }
+  .more-btn { background: #e9ecef; color: #333; border: none; padding: 0.4rem 0.9rem; border-radius: 6px; font-size: 0.9rem; cursor: pointer; margin-top: 0.5rem; }
+  .more-btn:hover { background: #dee2e6; }
+  .score { font-weight: bold; color: var(--accent); }
+  .hidden { display: none; }
+  .note { font-size: 0.85rem; color: var(--muted); margin-top: 1.5rem; }
+  footer { text-align: center; margin-top: 2rem; padding: 1.5rem 0; font-size: 0.85rem; color: var(--muted); border-top: 1px solid #eee; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>RetireSpot</h1>
+  <p class="subtitle">Discover cities that match your retirement priorities</p>
+
+  <!-- Intro -->
+  <div id="intro" class="card">
+    <div class="media-placeholder">
+      <img src="intro.jpg" alt="Welcome to RetireSpot" style="width:100%; height:100%; object-fit:cover; border-radius:12px;">
+    </div>
+    <h2 style="margin-top:0;">Find the place that fits you</h2>
+    <p>Answer a short series of questions about climate, taxes, healthcare, lifestyle, and more. Each question appears one at a time so you can take your time and see related visuals. At the end you’ll receive a personalized shortlist of top matching cities.</p>
+    <p>Set the importance of each factor with the slider — what matters most to you will count more in the ranking.</p>
+    <p class="note" style="margin-top:1rem;">This is an early prototype. Rankings use simplified public data and are for inspiration only.</p>
+    <div class="nav">
+      <span></span>
+      <button id="startBtn">Start the Quiz</button>
+    </div>
+  </div>
+
+  <!-- Question slides -->
+  <div id="quizArea" class="card hidden">
+    <div class="progress" id="progressText">Question 1 of 20</div>
+    <div class="media-placeholder" id="mediaArea">
+      <!-- Replace the text below with either:
+           <img src="your-image.jpg" alt="description">
+           or
+           <video src="your-video.mp4" autoplay muted loop playsinline></video>
+      -->
+      Image or video for this topic
+    </div>
+    <div class="question-text" id="questionText"></div>
+    <div class="options" id="optionsArea"></div>
+    <div class="weight">
+      Importance of this factor:
+      <input type="range" id="weightSlider" min="1" max="5" value="3">
+      <span id="weightLabel">3</span>
+    </div>
+    <div class="nav">
+      <button class="secondary" id="backBtn">Back</button>
+      <button id="nextBtn">Next</button>
+    </div>
+  </div>
+
+  <!-- Results -->
+  <div id="results" class="card hidden results">
+    <h2>Your Top 5 Matches</h2>
+    <div id="cityList"></div>
+    <div class="nav">
+      <button class="secondary" id="restartBtn">Start Over</button>
+    </div>
+    <p class="note">This is an early prototype. Rankings use simplified public data and are for inspiration only. You can expand the city list and refine scores over time.</p>
+  </div>
+</div>
+
+<script>
+const questions = [
+  { id: "climate", text: "What climate do you prefer?", options: ["Hot & humid", "Mild four seasons", "Cool / cold winters OK", "Dry heat", "Doesn't matter"], key: "climate", image: "climate.jpg" },
+  { id: "humidity", text: "How do you feel about humidity?", options: ["Low humidity preferred", "Moderate OK", "High humidity fine", "Doesn't matter"], key: "humidity", image: "humidity.jpg" },
+  { id: "taxes", text: "How important are favorable retirement taxes (no or low state income tax, etc.)?", options: ["Very important", "Somewhat important", "Not important"], key: "taxScore", image: "taxes.jpg" },
+  { id: "affordability", text: "What cost of living / housing level are you aiming for?", options: ["Very affordable", "Moderate", "Higher cost OK if other factors strong", "Doesn't matter"], key: "affordability", image: "affordability.jpg" },
+  { id: "propertyTax", text: "How much do low property taxes matter to you?", options: ["High priority", "Medium", "Low priority"], key: "propertyTax", image: "propertytax.jpg" },
+  { id: "healthcare", text: "How important is strong healthcare access?", options: ["Critical", "Important", "Nice to have", "Not a priority"], key: "healthcare", image: "healthcare.jpg" },
+  { id: "safety", text: "How important is low crime and high safety?", options: ["Very important", "Somewhat important", "Not a major concern"], key: "safety", image: "safety.jpg" },
+  { id: "politics", text: "Do you have a political lean preference for the area?", options: ["Conservative-leaning", "Liberal-leaning", "Moderate / balanced", "Doesn't matter"], key: "politics", image: "politics.jpg" },
+  { id: "walkable", text: "Do you prefer walkable areas?", options: ["Prefer walkable", "Car-dependent fine", "Doesn't matter"], key: "walkable", image: "walkable.jpg" },
+  { id: "size", text: "What community size do you prefer?", options: ["Small town", "Mid-size city", "Large metro", "Doesn't matter"], key: "size", image: "size.jpg" },
+  { id: "outdoors", text: "How important is access to outdoor recreation (beaches, mountains, golf, hiking)?", options: ["Very important", "Somewhat important", "Not important"], key: "outdoors", image: "outdoors.jpg" },
+  { id: "culture", text: "How important are cultural amenities (arts, dining, events)?", options: ["Very important", "Somewhat important", "Not important"], key: "culture", image: "culture.jpg" },
+  { id: "airport", text: "How important is proximity to a major airport?", options: ["Important", "Nice to have", "Not important"], key: "airport", image: "airport.jpg" },
+  { id: "senior", text: "Do you want 55+ or active-adult community options nearby?", options: ["Strong preference", "Nice to have", "Not needed"], key: "senior", image: "senior.jpg" },
+  { id: "disaster", text: "How important is lower natural disaster risk?", options: ["Very important", "Somewhat important", "Not a major concern"], key: "disaster", image: "disaster.jpg" },
+  { id: "snow", text: "What is your winter snow preference?", options: ["Prefer little/no snow", "Moderate snow OK", "Enjoy snow", "Doesn't matter"], key: "snow", image: "snow.jpg" },
+  { id: "traffic", text: "How important is low traffic and easy getting around?", options: ["High priority", "Medium", "Not important"], key: "traffic", image: "traffic.jpg" },
+  { id: "social", text: "How important are social, volunteer, or senior-center opportunities?", options: ["Very important", "Somewhat important", "Not important"], key: "social", image: "social.jpg" },
+  { id: "setting", text: "What kind of setting do you prefer?", options: ["Coastal", "Desert", "Mountain / foothills", "Inland / general", "Doesn't matter"], key: "setting", image: "setting.jpg" },
+  { id: "overall", text: "Overall, what matters more to you?", options: ["Quality of life first", "Balanced", "Cost is the top priority"], key: "qol", image: "overall.jpg" }
+];
+
+const cities = [
+  { name: "Orlando, FL", climate: "Hot & humid", humidity: "High", taxScore: 9, affordability: 6, propertyTax: 6, healthcare: 8, safety: 6, politics: "Moderate", walkable: 5, size: "Large metro", outdoors: 8, culture: 8, airport: 9, senior: 7, disaster: 5, snow: "Prefer little/no snow", traffic: 5, social: 7, setting: "Inland / general", qol: 8 },
+  { name: "Miami, FL", climate: "Hot & humid", humidity: "High", taxScore: 9, affordability: 4, propertyTax: 5, healthcare: 8, safety: 5, politics: "Liberal-leaning", walkable: 7, size: "Large metro", outdoors: 9, culture: 9, airport: 10, senior: 6, disaster: 4, snow: "Prefer little/no snow", traffic: 4, social: 7, setting: "Coastal", qol: 7 },
+  { name: "Tampa, FL", climate: "Hot & humid", humidity: "High", taxScore: 9, affordability: 6, propertyTax: 6, healthcare: 8, safety: 6, politics: "Moderate", walkable: 6, size: "Large metro", outdoors: 8, culture: 7, airport: 8, senior: 7, disaster: 5, snow: "Prefer little/no snow", traffic: 5, social: 7, setting: "Coastal", qol: 8 },
+  { name: "Sarasota, FL", climate: "Hot & humid", humidity: "High", taxScore: 9, affordability: 5, propertyTax: 6, healthcare: 7, safety: 7, politics: "Moderate", walkable: 6, size: "Mid-size city", outdoors: 8, culture: 8, airport: 6, senior: 8, disaster: 5, snow: "Prefer little/no snow", traffic: 7, social: 7, setting: "Coastal", qol: 8 },
+  { name: "Naples, FL", climate: "Hot & humid", humidity: "High", taxScore: 9, affordability: 3, propertyTax: 5, healthcare: 7, safety: 8, politics: "Conservative-leaning", walkable: 5, size: "Mid-size city", outdoors: 8, culture: 7, airport: 6, senior: 9, disaster: 5, snow: "Prefer little/no snow", traffic: 7, social: 7, setting: "Coastal", qol: 9 },
+  { name: "Jacksonville, FL", climate: "Hot & humid", humidity: "High", taxScore: 9, affordability: 7, propertyTax: 6, healthcare: 7, safety: 5, politics: "Moderate", walkable: 5, size: "Large metro", outdoors: 7, culture: 6, airport: 7, senior: 6, disaster: 5, snow: "Prefer little/no snow", traffic: 5, social: 6, setting: "Coastal", qol: 6 },
+  { name: "St. Petersburg, FL", climate: "Hot & humid", humidity: "High", taxScore: 9, affordability: 6, propertyTax: 6, healthcare: 7, safety: 6, politics: "Moderate", walkable: 7, size: "Mid-size city", outdoors: 8, culture: 7, airport: 6, senior: 7, disaster: 5, snow: "Prefer little/no snow", traffic: 6, social: 7, setting: "Coastal", qol: 7 },
+  { name: "Cape Coral, FL", climate: "Hot & humid", humidity: "High", taxScore: 9, affordability: 7, propertyTax: 6, healthcare: 6, safety: 7, politics: "Conservative-leaning", walkable: 4, size: "Mid-size city", outdoors: 8, culture: 5, airport: 5, senior: 8, disaster: 5, snow: "Prefer little/no snow", traffic: 6, social: 6, setting: "Coastal", qol: 7 },
+  { name: "Fort Lauderdale, FL", climate: "Hot & humid", humidity: "High", taxScore: 9, affordability: 4, propertyTax: 5, healthcare: 7, safety: 5, politics: "Moderate", walkable: 6, size: "Large metro", outdoors: 8, culture: 7, airport: 8, senior: 6, disaster: 4, snow: "Prefer little/no snow", traffic: 4, social: 6, setting: "Coastal", qol: 7 },
+  { name: "Scottsdale, AZ", climate: "Dry heat", humidity: "Low", taxScore: 8, affordability: 4, propertyTax: 6, healthcare: 8, safety: 8, politics: "Conservative-leaning", walkable: 6, size: "Mid-size city", outdoors: 8, culture: 8, airport: 8, senior: 8, disaster: 7, snow: "Prefer little/no snow", traffic: 6, social: 7, setting: "Desert", qol: 9 },
+  { name: "Tucson, AZ", climate: "Dry heat", humidity: "Low", taxScore: 8, affordability: 7, propertyTax: 7, healthcare: 7, safety: 6, politics: "Moderate", walkable: 5, size: "Mid-size city", outdoors: 8, culture: 7, airport: 6, senior: 7, disaster: 7, snow: "Prefer little/no snow", traffic: 6, social: 6, setting: "Desert", qol: 7 },
+  { name: "Phoenix, AZ", climate: "Dry heat", humidity: "Low", taxScore: 8, affordability: 6, propertyTax: 6, healthcare: 8, safety: 5, politics: "Moderate", walkable: 5, size: "Large metro", outdoors: 7, culture: 7, airport: 9, senior: 6, disaster: 7, snow: "Prefer little/no snow", traffic: 4, social: 6, setting: "Desert", qol: 6 },
+  { name: "Charleston, SC", climate: "Hot & humid", humidity: "High", taxScore: 7, affordability: 5, propertyTax: 6, healthcare: 7, safety: 6, politics: "Moderate", walkable: 8, size: "Mid-size city", outdoors: 8, culture: 9, airport: 6, senior: 6, disaster: 5, snow: "Prefer little/no snow", traffic: 6, social: 7, setting: "Coastal", qol: 8 },
+  { name: "Asheville, NC", climate: "Mild four seasons", humidity: "Moderate", taxScore: 6, affordability: 5, propertyTax: 6, healthcare: 6, safety: 7, politics: "Liberal-leaning", walkable: 7, size: "Mid-size city", outdoors: 9, culture: 8, airport: 5, senior: 6, disaster: 7, snow: "Moderate snow OK", traffic: 6, social: 7, setting: "Mountain / foothills", qol: 8 },
+  { name: "Greenville, SC", climate: "Mild four seasons", humidity: "Moderate", taxScore: 7, affordability: 7, propertyTax: 6, healthcare: 7, safety: 7, politics: "Conservative-leaning", walkable: 6, size: "Mid-size city", outdoors: 7, culture: 7, airport: 6, senior: 6, disaster: 7, snow: "Moderate snow OK", traffic: 7, social: 6, setting: "Inland / general", qol: 7 },
+  { name: "Raleigh, NC", climate: "Mild four seasons", humidity: "Moderate", taxScore: 6, affordability: 6, propertyTax: 6, healthcare: 8, safety: 7, politics: "Moderate", walkable: 6, size: "Large metro", outdoors: 7, culture: 7, airport: 7, senior: 6, disaster: 7, snow: "Moderate snow OK", traffic: 5, social: 6, setting: "Inland / general", qol: 7 },
+  { name: "Austin, TX", climate: "Hot & humid", humidity: "Moderate", taxScore: 8, affordability: 4, propertyTax: 5, healthcare: 7, safety: 6, politics: "Liberal-leaning", walkable: 6, size: "Large metro", outdoors: 7, culture: 9, airport: 8, senior: 5, disaster: 6, snow: "Prefer little/no snow", traffic: 4, social: 7, setting: "Inland / general", qol: 7 },
+  { name: "Las Vegas, NV", climate: "Dry heat", humidity: "Low", taxScore: 9, affordability: 6, propertyTax: 7, healthcare: 6, safety: 5, politics: "Moderate", walkable: 5, size: "Large metro", outdoors: 6, culture: 7, airport: 9, senior: 6, disaster: 7, snow: "Prefer little/no snow", traffic: 5, social: 6, setting: "Desert", qol: 6 },
+  { name: "Boise, ID", climate: "Mild four seasons", humidity: "Low", taxScore: 7, affordability: 6, propertyTax: 6, healthcare: 6, safety: 8, politics: "Conservative-leaning", walkable: 6, size: "Mid-size city", outdoors: 9, culture: 6, airport: 6, senior: 5, disaster: 7, snow: "Moderate snow OK", traffic: 6, social: 6, setting: "Mountain / foothills", qol: 7 },
+  { name: "Pittsburgh, PA", climate: "Cool / cold winters OK", humidity: "Moderate", taxScore: 6, affordability: 7, propertyTax: 5, healthcare: 8, safety: 6, politics: "Moderate", walkable: 6, size: "Large metro", outdoors: 6, culture: 8, airport: 7, senior: 6, disaster: 7, snow: "Moderate snow OK", traffic: 5, social: 6, setting: "Inland / general", qol: 7 },
+  { name: "Knoxville, TN", climate: "Mild four seasons", humidity: "Moderate", taxScore: 8, affordability: 8, propertyTax: 7, healthcare: 6, safety: 6, politics: "Conservative-leaning", walkable: 5, size: "Mid-size city", outdoors: 8, culture: 6, airport: 5, senior: 6, disaster: 7, snow: "Moderate snow OK", traffic: 6, social: 6, setting: "Mountain / foothills", qol: 6 },
+  { name: "Richmond, VA", climate: "Mild four seasons", humidity: "Moderate", taxScore: 6, affordability: 6, propertyTax: 6, healthcare: 7, safety: 6, politics: "Moderate", walkable: 6, size: "Mid-size city", outdoors: 6, culture: 7, airport: 6, senior: 6, disaster: 7, snow: "Moderate snow OK", traffic: 5, social: 6, setting: "Inland / general", qol: 6 },
+  { name: "Denver, CO", climate: "Mild four seasons", humidity: "Low", taxScore: 5, affordability: 4, propertyTax: 5, healthcare: 8, safety: 6, politics: "Liberal-leaning", walkable: 6, size: "Large metro", outdoors: 9, culture: 8, airport: 9, senior: 5, disaster: 6, snow: "Moderate snow OK", traffic: 5, social: 6, setting: "Mountain / foothills", qol: 8 },
+  { name: "Minneapolis, MN", climate: "Cool / cold winters OK", humidity: "Moderate", taxScore: 4, affordability: 6, propertyTax: 5, healthcare: 9, safety: 6, politics: "Liberal-leaning", walkable: 6, size: "Large metro", outdoors: 7, culture: 8, airport: 8, senior: 6, disaster: 8, snow: "Enjoy snow", traffic: 5, social: 7, setting: "Inland / general", qol: 7 },
+  { name: "Madison, WI", climate: "Cool / cold winters OK", humidity: "Moderate", taxScore: 5, affordability: 6, propertyTax: 5, healthcare: 8, safety: 7, politics: "Liberal-leaning", walkable: 7, size: "Mid-size city", outdoors: 7, culture: 7, airport: 6, senior: 6, disaster: 8, snow: "Enjoy snow", traffic: 6, social: 7, setting: "Inland / general", qol: 7 },
+  { name: "Sioux Falls, SD", climate: "Cool / cold winters OK", humidity: "Low", taxScore: 9, affordability: 8, propertyTax: 7, healthcare: 6, safety: 8, politics: "Conservative-leaning", walkable: 5, size: "Mid-size city", outdoors: 5, culture: 5, airport: 5, senior: 5, disaster: 8, snow: "Enjoy snow", traffic: 8, social: 6, setting: "Inland / general", qol: 6 },
+  { name: "Casper, WY", climate: "Cool / cold winters OK", humidity: "Low", taxScore: 9, affordability: 8, propertyTax: 7, healthcare: 5, safety: 7, politics: "Conservative-leaning", walkable: 5, size: "Small town", outdoors: 7, culture: 4, airport: 4, senior: 4, disaster: 8, snow: "Enjoy snow", traffic: 8, social: 5, setting: "Inland / general", qol: 5 },
+  { name: "The Woodlands, TX", climate: "Hot & humid", humidity: "High", taxScore: 8, affordability: 5, propertyTax: 5, healthcare: 8, safety: 8, politics: "Conservative-leaning", walkable: 6, size: "Mid-size city", outdoors: 7, culture: 6, airport: 7, senior: 6, disaster: 6, snow: "Prefer little/no snow", traffic: 6, social: 6, setting: "Inland / general", qol: 7 },
+  { name: "San Antonio, TX", climate: "Hot & humid", humidity: "Moderate", taxScore: 8, affordability: 7, propertyTax: 6, healthcare: 7, safety: 5, politics: "Moderate", walkable: 5, size: "Large metro", outdoors: 6, culture: 7, airport: 7, senior: 6, disaster: 6, snow: "Prefer little/no snow", traffic: 5, social: 6, setting: "Inland / general", qol: 6 },
+  { name: "Pensacola, FL", climate: "Hot & humid", humidity: "High", taxScore: 9, affordability: 7, propertyTax: 6, healthcare: 6, safety: 6, politics: "Conservative-leaning", walkable: 5, size: "Mid-size city", outdoors: 8, culture: 5, airport: 5, senior: 6, disaster: 5, snow: "Prefer little/no snow", traffic: 7, social: 6, setting: "Coastal", qol: 6 },
+  { name: "Myrtle Beach, SC", climate: "Hot & humid", humidity: "High", taxScore: 7, affordability: 6, propertyTax: 6, healthcare: 5, safety: 6, politics: "Conservative-leaning", walkable: 5, size: "Mid-size city", outdoors: 9, culture: 5, airport: 6, senior: 7, disaster: 5, snow: "Prefer little/no snow", traffic: 6, social: 6, setting: "Coastal", qol: 6 },
+  { name: "Virginia Beach, VA", climate: "Mild four seasons", humidity: "Moderate", taxScore: 6, affordability: 6, propertyTax: 6, healthcare: 7, safety: 7, politics: "Moderate", walkable: 6, size: "Large metro", outdoors: 8, culture: 6, airport: 6, senior: 6, disaster: 6, snow: "Moderate snow OK", traffic: 5, social: 6, setting: "Coastal", qol: 7 },
+  { name: "Colorado Springs, CO", climate: "Mild four seasons", humidity: "Low", taxScore: 5, affordability: 6, propertyTax: 6, healthcare: 7, safety: 7, politics: "Conservative-leaning", walkable: 5, size: "Mid-size city", outdoors: 9, culture: 6, airport: 6, senior: 5, disaster: 6, snow: "Moderate snow OK", traffic: 6, social: 6, setting: "Mountain / foothills", qol: 7 },
+  { name: "Albuquerque, NM", climate: "Dry heat", humidity: "Low", taxScore: 7, affordability: 7, propertyTax: 7, healthcare: 6, safety: 5, politics: "Moderate", walkable: 5, size: "Mid-size city", outdoors: 7, culture: 6, airport: 6, senior: 6, disaster: 7, snow: "Moderate snow OK", traffic: 6, social: 6, setting: "Desert", qol: 6 },
+  { name: "Huntsville, AL", climate: "Mild four seasons", humidity: "Moderate", taxScore: 7, affordability: 7, propertyTax: 7, healthcare: 7, safety: 6, politics: "Conservative-leaning", walkable: 5, size: "Mid-size city", outdoors: 6, culture: 6, airport: 6, senior: 5, disaster: 7, snow: "Moderate snow OK", traffic: 6, social: 6, setting: "Inland / general", qol: 6 },
+  { name: "Chattanooga, TN", climate: "Mild four seasons", humidity: "Moderate", taxScore: 8, affordability: 8, propertyTax: 7, healthcare: 6, safety: 6, politics: "Conservative-leaning", walkable: 6, size: "Mid-size city", outdoors: 8, culture: 6, airport: 5, senior: 5, disaster: 7, snow: "Moderate snow OK", traffic: 6, social: 6, setting: "Mountain / foothills", qol: 6 },
+  { name: "Port Charlotte, FL", climate: "Hot & humid", humidity: "High", taxScore: 9, affordability: 7, propertyTax: 6, healthcare: 6, safety: 7, politics: "Conservative-leaning", walkable: 4, size: "Mid-size city", outdoors: 8, culture: 5, airport: 4, senior: 8, disaster: 5, snow: "Prefer little/no snow", traffic: 7, social: 6, setting: "Coastal", qol: 6 },
+  { name: "Palm Coast, FL", climate: "Hot & humid", humidity: "High", taxScore: 9, affordability: 6, propertyTax: 6, healthcare: 6, safety: 7, politics: "Conservative-leaning", walkable: 4, size: "Mid-size city", outdoors: 8, culture: 5, airport: 5, senior: 7, disaster: 5, snow: "Prefer little/no snow", traffic: 7, social: 6, setting: "Coastal", qol: 6 },
+  { name: "Melbourne, FL", climate: "Hot & humid", humidity: "High", taxScore: 9, affordability: 6, propertyTax: 6, healthcare: 6, safety: 7, politics: "Moderate", walkable: 5, size: "Mid-size city", outdoors: 8, culture: 5, airport: 5, senior: 7, disaster: 5, snow: "Prefer little/no snow", traffic: 6, social: 6, setting: "Coastal", qol: 6 },
+  { name: "Daytona Beach, FL", climate: "Hot & humid", humidity: "High", taxScore: 9, affordability: 7, propertyTax: 6, healthcare: 6, safety: 5, politics: "Moderate", walkable: 5, size: "Mid-size city", outdoors: 8, culture: 5, airport: 5, senior: 6, disaster: 5, snow: "Prefer little/no snow", traffic: 6, social: 6, setting: "Coastal", qol: 5 },
+  { name: "Fort Myers, FL", climate: "Hot & humid", humidity: "High", taxScore: 9, affordability: 6, propertyTax: 6, healthcare: 6, safety: 6, politics: "Conservative-leaning", walkable: 5, size: "Mid-size city", outdoors: 8, culture: 5, airport: 6, senior: 7, disaster: 5, snow: "Prefer little/no snow", traffic: 6, social: 6, setting: "Coastal", qol: 6 },
+  { name: "Sierra Vista, AZ", climate: "Dry heat", humidity: "Low", taxScore: 8, affordability: 8, propertyTax: 7, healthcare: 5, safety: 7, politics: "Conservative-leaning", walkable: 4, size: "Small town", outdoors: 7, culture: 4, airport: 3, senior: 6, disaster: 7, snow: "Prefer little/no snow", traffic: 8, social: 5, setting: "Desert", qol: 5 },
+  { name: "Tempe, AZ", climate: "Dry heat", humidity: "Low", taxScore: 8, affordability: 5, propertyTax: 6, healthcare: 7, safety: 6, politics: "Moderate", walkable: 7, size: "Mid-size city", outdoors: 7, culture: 7, airport: 8, senior: 5, disaster: 7, snow: "Prefer little/no snow", traffic: 5, social: 6, setting: "Desert", qol: 7 },
+  { name: "Charlotte, NC", climate: "Mild four seasons", humidity: "Moderate", taxScore: 6, affordability: 5, propertyTax: 6, healthcare: 8, safety: 6, politics: "Moderate", walkable: 5, size: "Large metro", outdoors: 6, culture: 7, airport: 8, senior: 5, disaster: 7, snow: "Moderate snow OK", traffic: 4, social: 6, setting: "Inland / general", qol: 6 },
+  { name: "Columbia, SC", climate: "Hot & humid", humidity: "High", taxScore: 7, affordability: 7, propertyTax: 6, healthcare: 6, safety: 5, politics: "Conservative-leaning", walkable: 5, size: "Mid-size city", outdoors: 6, culture: 6, airport: 6, senior: 5, disaster: 6, snow: "Prefer little/no snow", traffic: 6, social: 6, setting: "Inland / general", qol: 5 },
+  { name: "Midland, MI", climate: "Cool / cold winters OK", humidity: "Moderate", taxScore: 6, affordability: 8, propertyTax: 6, healthcare: 6, safety: 8, politics: "Moderate", walkable: 5, size: "Small town", outdoors: 5, culture: 5, airport: 4, senior: 5, disaster: 8, snow: "Enjoy snow", traffic: 8, social: 6, setting: "Inland / general", qol: 6 },
+  { name: "Weirton, WV", climate: "Cool / cold winters OK", humidity: "Moderate", taxScore: 6, affordability: 9, propertyTax: 7, healthcare: 5, safety: 7, politics: "Conservative-leaning", walkable: 4, size: "Small town", outdoors: 5, culture: 4, airport: 4, senior: 5, disaster: 8, snow: "Moderate snow OK", traffic: 8, social: 5, setting: "Inland / general", qol: 5 },
+  { name: "Homosassa Springs, FL", climate: "Hot & humid", humidity: "High", taxScore: 9, affordability: 7, propertyTax: 6, healthcare: 5, safety: 7, politics: "Conservative-leaning", walkable: 3, size: "Small town", outdoors: 8, culture: 4, airport: 4, senior: 8, disaster: 5, snow: "Prefer little/no snow", traffic: 8, social: 5, setting: "Coastal", qol: 5 },
+  { name: "Port St. Lucie, FL", climate: "Hot & humid", humidity: "High", taxScore: 9, affordability: 6, propertyTax: 6, healthcare: 6, safety: 7, politics: "Moderate", walkable: 4, size: "Mid-size city", outdoors: 7, culture: 5, airport: 5, senior: 7, disaster: 5, snow: "Prefer little/no snow", traffic: 6, social: 6, setting: "Coastal", qol: 6 }
+];
+
+let currentIndex = 0;
+const answers = {};
+const weights = {};
+
+function showIntro() {
+  document.getElementById('intro').classList.remove('hidden');
+  document.getElementById('quizArea').classList.add('hidden');
+  document.getElementById('results').classList.add('hidden');
+}
+
+function showQuestion(index) {
+  const q = questions[index];
+  document.getElementById('progressText').textContent = `Question ${index + 1} of ${questions.length}`;
+  document.getElementById('mediaArea').innerHTML = q.image ? `<img src="${q.image}" alt="${q.text}">` : 'Image for this topic';
+  document.getElementById('questionText').textContent = q.text;
+
+  const optionsArea = document.getElementById('optionsArea');
+  optionsArea.innerHTML = q.options.map((opt, i) => `
+    <label>
+      <input type="radio" name="current" value="${opt}" ${answers[q.id] === opt || (!answers[q.id] && i === 0) ? 'checked' : ''}>
+      ${opt}
+    </label>
+  `).join('');
+
+  const slider = document.getElementById('weightSlider');
+  slider.value = weights[q.id] || 3;
+  document.getElementById('weightLabel').textContent = slider.value;
+
+  document.getElementById('backBtn').style.visibility = index === 0 ? 'hidden' : 'visible';
+  document.getElementById('nextBtn').textContent = index === questions.length - 1 ? 'See Results' : 'Next';
+
+  document.getElementById('intro').classList.add('hidden');
+  document.getElementById('quizArea').classList.remove('hidden');
+  document.getElementById('results').classList.add('hidden');
+}
+
+function saveCurrent() {
+  const q = questions[currentIndex];
+  const selected = document.querySelector('input[name="current"]:checked');
+  answers[q.id] = selected ? selected.value : q.options[0];
+  weights[q.id] = parseInt(document.getElementById('weightSlider').value);
+}
+
+function calculateMatches() {
+  const scored = cities.map(city => {
+    let totalScore = 0;
+    let maxPossible = 0;
+
+    questions.forEach(q => {
+      const w = weights[q.id] || 3;
+      maxPossible += w * 10;
+      let match = 5;
+
+      const userVal = answers[q.id];
+      const cityVal = city[q.key];
+
+      if (!userVal || userVal === "Doesn't matter" || userVal.includes("Not important") || userVal.includes("Not a priority") || userVal.includes("Not needed") || userVal.includes("Not a major concern")) {
+        match = 7;
+      } else if (typeof cityVal === "number") {
+        if (userVal.includes("Very") || userVal.includes("Critical") || userVal.includes("High priority") || userVal === "Quality of life first") {
+          match = cityVal;
+        } else if (userVal.includes("Somewhat") || userVal.includes("Important") || userVal.includes("Medium") || userVal === "Balanced") {
+          match = Math.round(cityVal * 0.7 + 3);
+        } else {
+          match = 6;
+        }
+      } else {
+        if (userVal === cityVal) match = 9;
+        else if (userVal.includes("OK") || userVal.includes("Nice")) match = 6;
+        else match = 3;
+      }
+      totalScore += match * w;
+    });
+
+    const percent = maxPossible > 0 ? Math.round((totalScore / maxPossible) * 100) : 50;
+    return { ...city, matchPercent: percent };
+  });
+
+  scored.sort((a, b) => b.matchPercent - a.matchPercent);
+  return scored.slice(0, 5);
+}
+
+function showResults() {
+  saveCurrent();
+  const top = calculateMatches();
+  document.getElementById('cityList').innerHTML = top.map((c, i) => {
+    const desc = `Strong match for your preferences in climate (${c.climate}), setting (${c.setting}), and overall livability. Tax friendliness and healthcare access score well relative to your priorities.`;
+    return `
+    <div class="city" data-index="${i}">
+      <h3>${i + 1}. ${c.name} <span class="score">${c.matchPercent}% match</span></h3>
+      <p class="desc">${desc}</p>
+      <button class="more-btn">More details</button>
+      <div class="details">
+        <strong>More details:</strong><br>
+        Climate: ${c.climate} • Humidity: ${c.humidity} • Size: ${c.size}<br>
+        Tax friendliness: ${c.taxScore}/10 • Affordability: ${c.affordability}/10 • Property taxes: ${c.propertyTax}/10<br>
+        Healthcare: ${c.healthcare}/10 • Safety: ${c.safety}/10 • Outdoors: ${c.outdoors}/10 • Culture: ${c.culture}/10<br>
+        Airport access: ${c.airport}/10 • Senior options: ${c.senior}/10 • Disaster risk (higher = lower risk): ${c.disaster}/10<br>
+        Politics: ${c.politics} • Setting: ${c.setting}
+      </div>
+    </div>`;
+  }).join('');
+
+  // Button click to expand/collapse
+  document.querySelectorAll('.more-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const city = btn.closest('.city');
+      city.classList.toggle('open');
+      btn.textContent = city.classList.contains('open') ? 'Hide details' : 'More details';
+    });
+  });
+
+  document.getElementById('intro').classList.add('hidden');
+  document.getElementById('quizArea').classList.add('hidden');
+  document.getElementById('results').classList.remove('hidden');
+}
+
+document.getElementById('startBtn').addEventListener('click', () => {
+  currentIndex = 0;
+  showQuestion(0);
+});
+
+document.getElementById('nextBtn').addEventListener('click', () => {
+  saveCurrent();
+  if (currentIndex < questions.length - 1) {
+    currentIndex++;
+    showQuestion(currentIndex);
+  } else {
+    showResults();
+  }
+});
+
+document.getElementById('backBtn').addEventListener('click', () => {
+  saveCurrent();
+  if (currentIndex > 0) {
+    currentIndex--;
+    showQuestion(currentIndex);
+  }
+});
+
+document.getElementById('weightSlider').addEventListener('input', (e) => {
+  document.getElementById('weightLabel').textContent = e.target.value;
+});
+
+document.getElementById('restartBtn').addEventListener('click', () => {
+  currentIndex = 0;
+  Object.keys(answers).forEach(k => delete answers[k]);
+  Object.keys(weights).forEach(k => delete weights[k]);
+  showIntro();
+});
+
+showIntro();
+</script>
+
+<footer>
+  <p><strong>RetireSpot</strong> – Find cities that match your retirement priorities.</p>
+  <p>This is an early prototype. Rankings use simplified public data and are for inspiration only.<br>
+  Results are not financial, tax, or relocation advice.</p>
+</footer>
+</body>
+</html>
